@@ -12,26 +12,42 @@ class Component(ABC):
         # between the output at the ith port and the input at the jth port
         # To account for polarization, element modified to have 2 elements: one for horizontal and one for vertical
         self.s_matrix = s_matrix
+        # TODO: change to list comprehension e.g.
+        # self.inputs = [None for _ in range(num_inputs)]
         self.inputs = list(None for _ in range(num_inputs))
+        # TODO: can just do
+        # self.input_aliases = list(range(num_inputs))
         self.input_aliases = list(i for i in range(num_inputs))
+        # TODO: change to list comprehension e.g.
+        # self.outputs = [None for _ in range(num_inputs)]
         self.outputs = list(None for _ in range(num_outputs))
+        # TODO: can just do
+        # self.output_aliases = list(range(num_inputs))
         self.output_aliases = list(i for i in range(num_inputs))
 
     def change_input_alias(self, index: int, name: str) -> None:
+        # TODO: create custom exception class
+        # TODO: calling this function twice will raise an exception
         if name in self.input_aliases:
             raise Exception("Alias already exists")
         self.input_aliases[index] = name
 
     def change_output_alias(self, index: int, name: str) -> None:
+        # TODO: create custom exception class
+        # TODO: calling this function twice will raise an exception
         if name in self.output_aliases:
             raise Exception("Alias already exists")
         self.output_aliases[index] = name
 
     def set_input(self, name: int | str, component: Component) -> None:
+        # TODO: import Component
+        # TODO: change to hashmap
         component_index = self.input_aliases.index(name)
         self.inputs[component_index] = component
     
     def set_output(self, name: int | str, component: Component) -> None:
+        # TODO: import Component
+        # TODO: change to hashmap
         component_index = self.input_aliases.index(name)
         self.outputs[component_index] = component
         
