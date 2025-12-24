@@ -2,7 +2,6 @@ import numpy as np
 from lumen.display.display import Display
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 class Poincare(Display):
     
