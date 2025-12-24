@@ -26,6 +26,9 @@ class Poincare(Display):
         # ========== latitude and longitude lines ==========
         N_lines = 10
         # latitude lines
+        u_fine = np.linspace(0, 2 * np.pi, 100) # For smooth circles
+        v_fine = np.linspace(0, np.pi, 100)     # For smooth arcs
+        
         for latitude in np.linspace(0, np.pi, N_lines):
             x = radius * np.sin(latitude) * np.cos(u_fine)
             y = radius * np.sin(latitude) * np.sin(u_fine)
