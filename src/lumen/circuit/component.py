@@ -3,7 +3,7 @@ import numpy as np
 from component import Component
 from exceptions import DuplicateAliasException, MissingAliasException
 from uuid import uuid4
-from port import Port
+from lumen.dataclasses.port import Port
 
 class Component(ABC):
     __slots__ = "name", "s_matrix", "inputs", "outputs"
@@ -69,4 +69,4 @@ class Component(ABC):
             input_port = component.search_by_input_alias(input_port_name) 
         
         output_port.connected_port = input_port
-        
+    
