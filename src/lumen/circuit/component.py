@@ -1,4 +1,4 @@
-from abc import abstractmethod, ABC
+from abc import ABC
 import numpy as np
 from component import Component
 from exceptions import DuplicateAliasException, MissingAliasException
