@@ -6,9 +6,9 @@ class QWP(Component):
     """Conceptual representation of a quarter-wave plate (QWP) within the
     photonics circuit
         
-    :param fast_axis: specification of whether the QWP's fast axis is aligned
+    :param fast_axis: Specification of whether the QWP's fast axis is aligned
         with the vertical or horizontal state of the light
-    :type fast_axis: Literal['vertical', 'horizontal']
+    :type fast_axis: literal - either the string 'vertical' or the string 'horizontal'
     """
     _COMPONENT_NAME = "QWP"
 
