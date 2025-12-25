@@ -1,9 +1,10 @@
 from abc import ABC
+from typing import TypeVar
 import numpy as np
-from component import Component
-from exceptions import DuplicateAliasException, MissingAliasException
+from ..models.port import Port
 from uuid import uuid4
-from lumen.dataclasses.port import Port
+
+T = TypeVar("T", bound="Component")
 
 class Component(ABC):
     __slots__ = "name", "s_matrix", "inputs", "outputs"
@@ -20,31 +21,35 @@ class Component(ABC):
         self.inputs = [Port(self) for _ in range(num_inputs)]
         self.outputs = [Port(self) for _ in range(num_outputs)]
 
-    def search_by_input_alias(self, alias: str):
+    def search_by_input_alias(self, alias: str) -> Port:
+        from .exceptions import MissingAliasException
         for input_port in self.inputs:
             if input_port.alias == alias:
                 return input_port
         raise MissingAliasException(alias)
 
-    def search_by_output_alias(self, alias: str):
+    def search_by_output_alias(self, alias: str) -> Port:
+        from .exceptions import MissingAliasException
         for output_port in self.outputs:
             if output_port.alias == alias:
                 return output_port
         raise MissingAliasException(alias)
     
     def change_input_alias(self, index: int, name: str) -> None:
+        from .exceptions import DuplicateAliasException
         for input_port in self.inputs:
             if name in input_port.alias:
                 raise DuplicateAliasException(name)
         self.inputs[index].alias = name
 
     def change_output_alias(self, index: int, name: str) -> None:
+        from .exceptions import DuplicateAliasException
         for output_port in self.outputs:
             if name in output_port.alias:
                 raise DuplicateAliasException(name)
         self.outputs[index].alias = name
 
-    def set_input(self, input_port_name: int | str, component: Component, output_port_name: int | str) -> None:
+    def set_input(self, input_port_name: int | str, component: T, output_port_name: int | str) -> None:
         if isinstance(output_port_name, int):
             output_port = component.outputs[output_port_name]
         elif isinstance(output_port_name, str):
@@ -57,7 +62,7 @@ class Component(ABC):
         
         input_port.connected_port = output_port
     
-    def set_output(self, output_port_name: int | str, component: Component, input_port_name: int | str) -> None:
+    def set_output(self, output_port_name: int | str, component: T, input_port_name: int | str) -> None:
         if isinstance(output_port_name, int):
             output_port = self.outputs[output_port_name]
         elif isinstance(output_port_name, str):
