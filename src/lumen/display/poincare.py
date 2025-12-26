@@ -63,8 +63,8 @@ class Poincare(Display):
         ax.plot(V, np.zeros(2), np.zeros(2), color="green", linewidth=4, linestyle="-", label="V")
 
         # V and H labels
-        ax.text(1.25*self._RADIUS + self._AXIS_LABEL_OFFSET, 0, 0, r"$|H \rangle$", color="black", fontsize=14)
-        ax.text(-1.25*self._RADIUS - self._AXIS_LABEL_OFFSET, 0, 0, r"$|V \rangle$", color="black", fontsize=14)
+        ax.text(1.25*self._RADIUS + self._AXIS_LABEL_OFFSET, 0, 0, r"$\mathbf{|H \rangle}$", color="black", fontsize=14)
+        ax.text(-1.25*self._RADIUS - self._AXIS_LABEL_OFFSET, 0, 0, r"$\mathbf{|V \rangle}$", color="black", fontsize=14)
 
         # A and D axes
         D = self._AXIS_POINTS
@@ -73,8 +73,8 @@ class Poincare(Display):
         ax.plot(np.zeros(2), A, np.zeros(2), color="purple", linewidth=4, linestyle="-", label="R")
         
         # A and D labels
-        ax.text(0, self._AXIS_SCALE_FACTOR*self._RADIUS + self._AXIS_LABEL_OFFSET, 0, r"$|D \rangle$", color="black", fontsize=14)
-        ax.text(0, -self._AXIS_SCALE_FACTOR*self._RADIUS - self._AXIS_LABEL_OFFSET, 0, r"$|A \rangle$", color="black", fontsize=14)
+        ax.text(0, self._AXIS_SCALE_FACTOR*self._RADIUS + self._AXIS_LABEL_OFFSET, 0, r"$\mathbf{|D \rangle}$", color="black", fontsize=14)
+        ax.text(0, -self._AXIS_SCALE_FACTOR*self._RADIUS - self._AXIS_LABEL_OFFSET, 0, r"$\mathbf{|A \rangle}$", color="black", fontsize=14)
         
         # R and L axes
         R = self._AXIS_POINTS
@@ -83,8 +83,8 @@ class Poincare(Display):
         ax.plot(np.zeros(2), np.zeros(2), L, color="blue", linewidth=4, linestyle="-", label="L")
         
         # R and L labels
-        ax.text(0, 0, self._AXIS_SCALE_FACTOR * self._RADIUS + self._AXIS_LABEL_OFFSET, r"$|R \rangle$", color="black", fontsize=14)
-        ax.text(0, 0, -self._AXIS_SCALE_FACTOR * self._RADIUS - self._AXIS_LABEL_OFFSET, r"$|L \rangle$", color="black", fontsize=14)
+        ax.text(0, 0, self._AXIS_SCALE_FACTOR * self._RADIUS + self._AXIS_LABEL_OFFSET, r"$\mathbf{|R \rangle}$", color="black", fontsize=14)
+        ax.text(0, 0, -self._AXIS_SCALE_FACTOR * self._RADIUS - self._AXIS_LABEL_OFFSET, r"$\mathbf{|L \rangle}$", color="black", fontsize=14)
         
         # plot light information on graph
         S0, S1, S2, S3 = self.light.stokes_vector()
