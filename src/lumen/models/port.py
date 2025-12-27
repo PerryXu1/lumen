@@ -1,17 +1,73 @@
+from abc import ABC
 from dataclasses import dataclass, field
-from typing import Optional, Self
+from typing import Optional
 from uuid import UUID, uuid4
+
+
+class Connection(ABC):
+    """Connection abstract base class that cannot be instantiated."""
+
+    def __new__(cls):
+        """Prevents the class from being instantiated directly
+        """
+        
+        if cls is Connection:
+            raise TypeError("Cannot instantiate abstract class 'Connection'.")
+        return super().__new__(cls)
+
 
 @dataclass(frozen=True, slots=True)
 class Port:
     """Class that represents a port of a component.
-    
+
     :param connected_port: The other port that the port is connected to
     :type connected_port: Port
     :param alias: Alias of the port, which can be used to identify it
     :type alias: str, optional
     """
-    
-    connected_port: Self
+
+    connection: Connection
     alias: Optional[str]
     id: UUID = field(default_factory=uuid4)
+
+
+def singleton(cls):
+    """Injects singleton behavior into a class."""
+    
+    cls._instance = None
+
+    orig_new = cls.__new__
+
+    def __new__(inner_cls, *args, **kwargs):
+        """Creates class instance
+        """
+        
+        if inner_cls._instance is None:
+            inner_cls._instance = orig_new(inner_cls, *args, **kwargs)
+        return inner_cls._instance
+
+    cls.__new__ = __new__
+    return cls
+
+
+@dataclass(frozen=True, slots=True)
+class PortConnection(Connection):
+    """Representation of a port's connection to another port
+    
+    :param port: The other port that the port is connected to
+    :type port: Port
+    """
+    port: Port
+
+
+@singleton
+class InputConnection(Connection):
+    """Representation of a port's connection to an input
+    """
+    pass
+
+
+@singleton
+class OutputConnection(Connection):
+    """Representation of a port's connection to an output"""
+    pass
