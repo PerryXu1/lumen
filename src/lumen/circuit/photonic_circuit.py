@@ -87,7 +87,7 @@ class PhotonicCircuit:
             self.circuit_inputs.pop(input_port)
             
         component1.set_output(output_name, component2, input_name)
-        component2.set_input(input_name, component1, output_name)
+        component2.connect_input_port(input_name, component1, output_name)
 
     def disconnect_by_input(self, component: Component, input_port_name: str | int) -> None:
         """Disconnects a component's input from another component's output and vice versa.
