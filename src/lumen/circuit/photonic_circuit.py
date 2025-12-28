@@ -1,5 +1,5 @@
-from collections.abc import MutableMapping, MutableSequence, Sequence, Optional
-
+from collections.abc import MutableMapping, MutableSequence, Sequence
+from typing import Optional
 from ..circuit.laser import Laser
 from ..models.port import InputConnection, OutputConnection, Port, PortConnection
 from .component import Component
@@ -12,7 +12,7 @@ class PhotonicCircuit:
     functional circuit.
     """
     
-    __slots__ = "_components", "circut_inputs", "circuit_outputs"
+    __slots__ = "id", "_components", "circuit_inputs", "circuit_outputs"
 
     def __init__(self):
         self.id = uuid4()
@@ -20,6 +20,7 @@ class PhotonicCircuit:
         self.circuit_inputs: MutableMapping[Port] = {} # the ports that the laser light inputs to
         self.circuit_outputs: MutableSequence[Port] = [] # the ports at which the final state is desired
 
+        # TODO: make it so it takes in Component + index/alias, not port directly
     def set_circuit_input(self, port: Port, laser: Laser) -> None:
         """Sets a port that laser light source inputs to.
         
@@ -28,23 +29,31 @@ class PhotonicCircuit:
         :param laser: The laser used as input at that port
         :type laser: Laser
         """
+        port_found = False
         for component in self._components:
-            if port in component.input_port:
+            if port in component._input_ports:
+                port_found = True
                 self.circuit_inputs[port] = laser
                 port.connection = InputConnection()
-        raise MissingPortException(component)
+        if port_found == False:
+            raise MissingPortException(port)
     
+    # TODO: make it so it takes in Component + index/alias, not port directly
     def set_circuit_output(self, port: Port) -> None:
         """Sets a port as an output, where the final state is desired.
         
         :param port: The port that the laser light inputs to
         :type port: Port
         """
+        
+        port_found = False
         for component in self._components:
-            if port in component.input_port:
+            if port in component._output_ports:
+                port_found = True
                 self.circuit_outputs.append(port)
                 port.connection = OutputConnection()
-        raise MissingPortException(component)
+        if port_found == False:
+            raise MissingPortException(component)
 
     def add(self, component: Component) -> None:
         """Adds a component to the circuit.
@@ -75,11 +84,11 @@ class PhotonicCircuit:
         if isinstance(output_name, str):
             output_port = component1.search_by_output_alias(output_name)
         elif isinstance(output_name, int):
-            output_port = component1.output_ports[output_name]
+            output_port = component1._output_ports[output_name]
         if isinstance(input_name, str):
             input_port = component2.search_by_input_alias(input_name)
         elif isinstance(input_name, int):
-            input_port = component2.input_ports[input_name]
+            input_port = component2._input_ports[input_name]
             
         if output_port in self.circuit_outputs:
             self.circuit_outputs.remove(output_port)
@@ -105,7 +114,7 @@ class PhotonicCircuit:
         if isinstance(input_port_name, str):
             input_port = component.search_by_input_alias(input_port_name)
         elif isinstance(input_port_name, int):
-            input_port = component.input_ports[input_port_name]
+            input_port = component._input_ports[input_port_name]
         
         output_port = input_port.connection
         if isinstance(output_port, PortConnection):
@@ -129,7 +138,7 @@ class PhotonicCircuit:
         if isinstance(output_port_name, str):
             output_port = component.search_by_input_alias(output_port_name)
         elif isinstance(output_port_name, int):
-            output_port = component.input_ports[output_port_name]
+            output_port = component._input_ports[output_port_name]
         
         input_port = output_port.connection
         if isinstance(input_port, PortConnection):
