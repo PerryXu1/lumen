@@ -17,10 +17,10 @@ class DuplicateAliasException(Exception):
     __slots__ = "alias", "message"
     
     def __init__(self, alias: str, message: Optional[str]):
+        super().__init__(self.alias, self.message)
         self.message = message
         self.alias = alias
-        super().__init__(self.alias, self.message)
-        
+                
     def __str__(self):
         """Method that defines the message printed when the exception is thrown.
         Either a custom message passed into the constructor or the default message.
@@ -43,9 +43,9 @@ class MissingAliasException(Exception):
     __slots__ = "alias", "message"
     
     def __init__(self, alias: str, message: Optional[str]):
+        super().__init__(self.alias, self.message)
         self.message = message
         self.alias = alias
-        super().__init__(self.alias, self.message)
         
     def __str__(self):
         """Method that defines the message printed when the exception is thrown.
@@ -71,9 +71,9 @@ class MissingPortException(Exception):
     __slots__ = "port", "message"
     
     def __init__(self, port: Port, message: Optional[str]):
+        super().__init__(self.port, self.message)
         self.port = port
         self.message = message
-        super().__init__(self.port, self.message)
         
     def __str__(self):
         """Method that defines the message printed when the exception is thrown.
@@ -99,10 +99,10 @@ class MissingComponentException(Exception):
     
     __slots__ = "component", "message"
     
-    def __init__(self, component: Component, message: Optional[str]):        
+    def __init__(self, component: Component, message: Optional[str]):   
+        super().__init__(self.component, self.message)     
         self.component = component
         self.message = message
-        super().__init__(self.component, self.message)
         
     def __str__(self):
         """Method that defines the message printed when the exception is thrown.
