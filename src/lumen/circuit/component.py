@@ -153,7 +153,7 @@ class Component(ABC):
             
         input_port.connection = output_port
     
-    def set_output(self, output_port_name: int | str, component: T, input_port_name: int | str) -> None:
+    def connect_output_port(self, output_port_name: int | str, component: T, input_port_name: int | str) -> None:
         """Connects a component's output port with another component's input port.
         
         :param input_port_name: The index or alias of the input port
