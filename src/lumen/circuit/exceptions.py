@@ -1,6 +1,6 @@
 from typing import Optional
 
-from circuit.component import Component
+from .component import Component
 
 from ..models.port import Port
 
@@ -16,8 +16,8 @@ class DuplicateAliasException(Exception):
     
     __slots__ = "alias", "message"
     
-    def __init__(self, alias: str, message: Optional[str]):
-        super().__init__(self.alias, self.message)
+    def __init__(self, alias: str, message: Optional[str] = None):
+        super().__init__(alias, message)
         self.message = message
         self.alias = alias
                 
@@ -42,8 +42,8 @@ class MissingAliasException(Exception):
     
     __slots__ = "alias", "message"
     
-    def __init__(self, alias: str, message: Optional[str]):
-        super().__init__(self.alias, self.message)
+    def __init__(self, alias: str, message: Optional[str] = None):
+        super().__init__(alias, message)
         self.message = message
         self.alias = alias
         
@@ -70,8 +70,8 @@ class MissingPortException(Exception):
     """
     __slots__ = "port", "message"
     
-    def __init__(self, port: Port, message: Optional[str]):
-        super().__init__(self.port, self.message)
+    def __init__(self, port: Port, message: Optional[str] = None):
+        super().__init__(port, message)
         self.port = port
         self.message = message
         
@@ -99,8 +99,8 @@ class MissingComponentException(Exception):
     
     __slots__ = "component", "message"
     
-    def __init__(self, component: Component, message: Optional[str]):   
-        super().__init__(self.component, self.message)     
+    def __init__(self, component: Component, message: Optional[str] = None):   
+        super().__init__(component, message)     
         self.component = component
         self.message = message
         
