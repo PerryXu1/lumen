@@ -20,7 +20,7 @@ class PhotonicCircuit:
         self.circuit_inputs: MutableMapping[Port] = {} # the ports that the laser light inputs to
         self.circuit_outputs: MutableSequence[Port] = [] # the ports at which the final state is desired
 
-    def set_input(self, port: Port, laser: Laser) -> None:
+    def set_circuit_input(self, port: Port, laser: Laser) -> None:
         """Sets a port that laser light source inputs to.
         
         :param port: The port that the laser light inputs to
@@ -34,7 +34,7 @@ class PhotonicCircuit:
                 port.connection = InputConnection()
         raise MissingPortException(component)
     
-    def set_output(self, port: Port) -> None:
+    def set_circuit_output(self, port: Port) -> None:
         """Sets a port as an output, where the final state is desired.
         
         :param port: The port that the laser light inputs to
@@ -86,7 +86,7 @@ class PhotonicCircuit:
         if input_port in self.circuit_inputs:
             self.circuit_inputs.pop(input_port)
             
-        component1.set_output(output_name, component2, input_name)
+        component1.connect_output_port(output_name, component2, input_name)
         component2.connect_input_port(input_name, component1, output_name)
 
     def disconnect_by_input(self, component: Component, input_port_name: str | int) -> None:
