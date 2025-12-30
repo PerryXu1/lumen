@@ -1,4 +1,3 @@
-from typing import Literal
 from ..component import Component
 import numpy as np
 
