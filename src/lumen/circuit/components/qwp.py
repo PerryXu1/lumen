@@ -17,8 +17,6 @@ class QWP(Component):
     _COMPONENT_NAME = "QWP"
 
     def __init__(self, fast_axis: Literal["vertical", "horizontal"]):
-        """Constructor method
-        """
         if fast_axis == "vertical":
             s_matrix =  np.array([[0, 0, 1j, 0],
                                   [0, 0, 0, 1],
