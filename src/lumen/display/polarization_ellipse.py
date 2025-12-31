@@ -62,8 +62,8 @@ class PolarizationEllipse(Display):
         # plot static ellipse
         phase = np.linspace(0, 2*np.pi, self._NUM_POINTS)
         eh, ev = self.light.e
-        eh = ((eh * np.exp(-1j * phase))/np.abs(eh)).real
-        ev = ((ev * np.exp(-1j * phase))/np.abs(ev)).real
+        eh = ((eh * np.exp(1j * phase))/np.abs(eh)).real
+        ev = ((ev * np.exp(1j * phase))/np.abs(ev)).real
         ax.plot(eh, ev, label="Polarization Ellipse", color='blue', linewidth=2, linestyle='-')
         
         # plot arrow to show chirality
@@ -111,8 +111,8 @@ class PolarizationEllipse(Display):
             current_phase = (self._OMEGA * t) % (2 * np.pi)
             
             # update point position
-            point.set_data([((self.light.e[0] * np.exp(1j * (-self._OMEGA*t)))/np.abs(self.light.e[0])).real],
-                                        [((self.light.e[1] * np.exp(1j * (-self._OMEGA*t)))/np.abs(self.light.e[1])).real])
+            point.set_data([((self.light.e[0] * np.exp(1j * (self._OMEGA*t)))/np.abs(self.light.e[0])).real],
+                                        [((self.light.e[1] * np.exp(1j * (self._OMEGA*t)))/np.abs(self.light.e[1])).real])
             
             # update progress bar
             progress_ratio = current_phase / (2 * np.pi)
