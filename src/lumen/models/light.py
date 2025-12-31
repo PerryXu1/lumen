@@ -1,8 +1,5 @@
-from collections.abc import Sequence
-from typing import Optional
 from lumen.models.stokes import Stokes, StokesParameters
 import numpy as np
-
 
 class Light:
     """Class that represents light and stores its relevant properties. Primarily uses a
@@ -19,7 +16,7 @@ class Light:
     __slots__ = "e", "frequency", "phase"
 
     def __init__(self, eh: complex, ev: complex):
-        self.e = np.array([eh, ev])
+        self.e = np.array([eh, ev], dtype=complex)
         
     @classmethod
     def from_jones(cls, eh: complex, ev: complex):
@@ -27,14 +24,13 @@ class Light:
     
     @classmethod
     def from_stokes(cls, stokes: Stokes, global_phase: float = 0):
-        Ax = np.sqrt(0.5*(stokes.S0 + stokes.S1))
-        Ay = np.sqrt(0.5*(stokes.S0 - stokes.S1))
+        Ax = np.sqrt(0.5 * (stokes.S0 + stokes.S1))
+        Ay = np.sqrt(0.5 * (stokes.S0 - stokes.S1))
         
-        # phase of the V component relative to the H component
-        # + phase means V is ahead of H
+        # IEEE Convention: RHC = clockwise = V leads H
         relative_phase = np.arctan2(stokes.S3, stokes.S2)
-        eh = Ax*np.exp(1j*global_phase)
-        ev = Ay*np.exp(1j*(global_phase + relative_phase))
+        eh = Ax*np.exp(1j * global_phase)
+        ev = Ay*np.exp(1j * (global_phase + relative_phase))
         return cls(eh, ev)
 
     def stokes_parameter(self, parameter: StokesParameters, /) -> float:
@@ -90,7 +86,7 @@ class Light:
         """
         
         S0, S1, S2, S3 = self.stokes_vector()
-        return np.sqrt(np.pow(S1, 2) + np.pow(S2, 2) + np.pow(S3, 2))/S0
+        return np.sqrt(np.square(S1) + np.square(S2) + np.square(S3))/S0
 
     @property
     def orientation_angle(self) -> float:
@@ -115,5 +111,5 @@ class Light:
         S1 = self.stokes(1)
         S2 = self.stokes(2)
         S3 = self.stokes(3)
-        self.ellipticity_angle = 0.5 * \
-            np.arcsin(S3/np.sqrt(np.pow(S1, 2) + np.pow(S2, 2) + np.pow(S3, 2)))
+        return 0.5 * \
+            np.arcsin(S3/np.sqrt(np.square(S1) + np.square(S2) + np.square(S3)))
