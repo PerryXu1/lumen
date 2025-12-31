@@ -1,5 +1,6 @@
 from dataclasses import dataclass, astuple
 from enum import Enum
+from typing import Iterator
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +22,7 @@ class Stokes:
     S2: float
     S3: float
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[float]:
         """
         Return an iterator over the fields of the dataclass in the order S0, S1, S2, S3.
         

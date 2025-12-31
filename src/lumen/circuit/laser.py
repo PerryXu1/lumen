@@ -11,4 +11,4 @@ class Laser:
         self._light_func = light_func
     
     def __call__(self, t: float):
-        self._light_func(t)
+        return self._light_func(t)
