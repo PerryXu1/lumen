@@ -18,6 +18,8 @@ class MatrixSolver(Enum):
     
 class Simulation:
     SMatrix4x4 = Annotated[NDArray[np.complex128], Literal[4, 4]]
+    _COMPLEX_SIZE_BYTES = 16
+    _GB_TO_BYTES = 1024 ** 3
     
     def __init__(self, photonic_circuit: PhotonicCircuit):
         self.photonic_circuit = photonic_circuit
@@ -85,8 +87,7 @@ class Simulation:
                                                   num_ports, port_to_index, time)
             
             if solver == MatrixSolver.DENSE:
-                global_matrix = global_matrix.toarray() # convert to dense format for dense solver
-                output_vector = np.linalg.solve(global_matrix, input_vector)
+                output_vector = np.linalg.solve(global_matrix.toarray(), input_vector)
             elif solver == MatrixSolver.SPARSE:
                 output_vector = linalg.spsolve(global_matrix, input_vector)
             
@@ -227,7 +228,7 @@ class Simulation:
     def _select_solver(self, A: csc_matrix) -> MatrixSolver:
         dim = A.shape[0]
         density = A.getnnz() / (dim ** 2)
-        estimated_dense_size_gb = ((dim ** 2) * 16) / (1024 ** 3)
+        estimated_dense_size_gb = ((dim ** 2) * self._COMPLEX_SIZE_BYTES) / self._GB_TO_BYTES
         
         # sparse overhead too large compared to dense
         if dim < 1000:
