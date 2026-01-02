@@ -97,7 +97,6 @@ class Light:
         
         return self.stokes_parameter(StokesParameters.S0)
 
-    @property
     def DOP(self) -> float:
         """Calculates the degree of polarization (DOP) of the light.
         
@@ -108,7 +107,6 @@ class Light:
         S0, S1, S2, S3 = self.stokes_vector()
         return np.sqrt(np.square(S1) + np.square(S2) + np.square(S3))/S0
 
-    @property
     def orientation_angle(self) -> float:
         """Calculates the orientation angle of the light.
         
@@ -120,7 +118,6 @@ class Light:
         S2 = self.stokes(2)
         return 0.5*np.arctan2(S2, S1)
 
-    @property
     def ellipticity_angle(self) -> float:
         """Calculates the ellipticity angle of the light.
         

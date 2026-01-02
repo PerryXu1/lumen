@@ -1,9 +1,11 @@
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import Optional
+from typing import MutableSequence, Optional
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from lumen.models.light import Light
+from numpy.typing import NDArray
+import numpy as np
 
 @dataclass(frozen=True, slots=True)
 class DisplaySettings:
@@ -33,35 +35,70 @@ class DisplaySettings:
             raise ValueError("Parameter 'height' must be positive.")
 
 
-class Display(ABC):
-    """Abstract class that represents a visual display of light state information.
+class DisplayOne(ABC):
+    """Abstract class that represents a visual display of a single light state.
     
-    :param light: The light whose information will be displayed
-    :type light: Light
     :param settings: Optional settings that can be passed in to change characteristics
         of the display
     :type settings: DisplaySettings (optional)
     """
     
     # default settings for a display
-    DEFAULT_WIDTH = 10
-    DEFAULT_HEIGHT = 10
-    DEFAULT_BACKGROUND_COLOR = "#E6E6E6"
+    _DEFAULT_WIDTH = 10
+    _DEFAULT_HEIGHT = 10
+    _DEFAULT_BACKGROUND_COLOR = "#E6E6E6"
 
-    __slots__ = "light", "settings"
-
-    def __init__(self, light: Light, settings: Optional[DisplaySettings] = None):        
-        self.light = light
+    def __init__(self, settings: Optional[DisplaySettings] = None):        
         # default settings used if no settings are passed in
         self.settings = settings if settings is not None else DisplaySettings(
-            width=self.DEFAULT_WIDTH,
-            height=self.DEFAULT_HEIGHT,
-            background_color=self.DEFAULT_BACKGROUND_COLOR,
+            width=self._DEFAULT_WIDTH,
+            height=self._DEFAULT_HEIGHT,
+            background_color=self._DEFAULT_BACKGROUND_COLOR,
         )
 
     @abstractmethod
-    def display(self) -> None:
-        """Displays the light data"""
+    def display_one(self, light) -> None:
+        """Displays the light state."""
+        pass
+
+    def create_fig(self) -> Figure:
+        """Creates a figure, which can be modified in the display method.
+        Ensures consistency across displays.
+        
+        :return: A figure defined with default settings
+        :rtype: Figure
+        """
+        
+        return plt.figure(
+            figsize=(self.settings.width, self.settings.height),
+            facecolor=self.settings.background_color,
+            constrained_layout=True
+        )
+
+class DisplayMany(ABC):
+    """Abstract class that represents a visual display of many light states.
+    
+    :param settings: Optional settings that can be passed in to change characteristics
+        of the display
+    :type settings: DisplaySettings (optional)
+    """
+    
+    # default settings for a display
+    _DEFAULT_WIDTH = 10
+    _DEFAULT_HEIGHT = 10
+    _DEFAULT_BACKGROUND_COLOR = "#E6E6E6"
+
+    def __init__(self, settings: Optional[DisplaySettings] = None):        
+        # default settings used if no settings are passed in
+        self.settings = settings if settings is not None else DisplaySettings(
+            width=self._DEFAULT_WIDTH,
+            height=self._DEFAULT_HEIGHT,
+            background_color=self._DEFAULT_BACKGROUND_COLOR,
+        )
+
+    @abstractmethod
+    def display_many(self, times: NDArray[np.float64], light_states: MutableSequence[Light]) -> None:
+        """Displays the sequence of light states."""
         
         pass
 

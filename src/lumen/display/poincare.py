@@ -1,10 +1,16 @@
-from typing import Optional
+from typing import MutableSequence, Optional, Sequence
+from matplotlib.animation import FuncAnimation
+from matplotlib.axes import Axes
+from matplotlib.collections import PathCollection
+from matplotlib.patches import Rectangle
+from matplotlib.text import Text
 import numpy as np
+from numpy.typing import NDArray
 import matplotlib.pyplot as plt
-from .display import Display, DisplaySettings
+from .display import DisplayOne, DisplayMany, DisplaySettings
 from ..models.light import Light
 
-class Poincare(Display):
+class Poincare(DisplayOne, DisplayMany):
     """A display that plots the Stokes parameters on a Poincare Sphere.
     
     :param light: The light whose Stokes parameters are displayed
@@ -20,12 +26,149 @@ class Poincare(Display):
     _AXIS_POINTS = np.array([0, _AXIS_SCALE_FACTOR * _RADIUS]) # list of points used to graph axes
     _ZOOM = 0.85 # zoom on the 3d poincare display
     _AXIS_LABEL_OFFSET = 0.1 # offset of axes labels from the ends of the axes
+    _FPS = 60
+    _MIN_S0 = 10 ** -12 # to prevent division by zero
     
-    def  __init__(self, light: Light, *, settings: Optional[DisplaySettings] = None):
-        super().__init__(light, settings)
+    def  __init__(self, *, settings: Optional[DisplaySettings] = None):
+        super().__init__(settings)
         
-    def display(self) -> None:
-        """Displays the light information on the Poincare sphere
+    def display_one(self, light: Light) -> None:
+        """Displays a single light state on the Poincare sphere.
+        
+        :param light: The light to be displayed
+        :type light: Light
+        """
+        fig = super().create_fig()
+        ax = fig.add_subplot(111, projection='3d')
+        
+        self._draw_poincare_sphere(ax)        
+        
+        # plot light information on graph
+        S0, S1, S2, S3 = light.stokes_vector()
+        if S0 > self._MIN_S0:
+            ax.scatter(S1/S0, S2/S0, S3/S0, c='black', marker='o', s=300)
+        else:
+            ax.scatter([], [], [], c='black', marker='o', s=300)
+        
+        # title
+        plt.suptitle("Poincare Sphere\n", fontsize=20, fontweight='bold', y=0.95)
+        plt.figtext(0.5, 0.88, f"Stokes Parameters: ({S0: .4f}, {S1: .4f}, {S2: .4f}, {S3: .4f})",
+                    ha="center", fontsize=12)
+        
+        plt.show()
+    
+    def display_many(self, times: NDArray[np.float64], light_states: MutableSequence[Light]) -> None:
+        """Displays a sequence of light states corresponding to a sequence of times on a Poincare sphere.
+        
+        :param times: The times that correspond to the light states
+        :type times: NDArray[np.float64]
+        :param light_states: The corresponding light states
+        :type light_states: MutableSequence[Light]
+        """
+        
+        fig = super().create_fig()
+        gs = fig.add_gridspec(2, 1, height_ratios=[15, 1])
+        ax = fig.add_subplot(gs[0], projection='3d')
+
+        self._draw_poincare_sphere(ax)        
+        
+        # plot light information on graph
+        point = ax.scatter([], [], [], c='black', marker='o', s=300)
+        
+        # title
+        plt.suptitle("Poincare Sphere\n", fontsize=20, fontweight='bold', y=0.95)
+        subtext = plt.figtext(0.5, 0.88, "",
+                    ha="center", fontsize=12)
+        
+        # progress bar
+        footer_pos = gs[1].get_position(fig)
+        bar_width = 0.6
+        bar_height = 0.03
+        bar_x = 0.2
+        bar_y = (footer_pos.height / 2)
+        
+        bar_bg = Rectangle((bar_x, bar_y), bar_width, bar_height, 
+                        transform=fig.transFigure, color='gray', alpha=0.2)
+        bar_fill = Rectangle((bar_x, bar_y), 0.0, bar_height, 
+                            transform=fig.transFigure, color='blue', alpha=0.8)
+        time_text = fig.text(bar_x + bar_width + 0.02, bar_y + bar_height/2, '', 
+                            transform=fig.transFigure, fontsize=10, va='center')
+        
+        fig.patches.extend([bar_bg, bar_fill])
+        
+        trail, = ax.plot([], [], [], c='blue', alpha=0.5, linewidth=1.5)
+        history_x, history_y, history_z = [], [], []
+        
+        def update(frame: int) -> tuple[PathCollection, Rectangle, Text, Text]:
+            """Function used in FuncAnimation to update graphics every animation frame.
+            
+            :param frame: The frame number of the specified frame in the animation
+            :type frame: int
+            :return: The updated point, the updated progress bar rectangle, and the updated
+                updated phase text
+            :rtype: Sequence[PathCollection, Rectangle, Text, Text]
+            """
+            
+            start_time = min(times)
+            end_time = max(times)
+            current_time = times[frame]
+            total_time = end_time - start_time
+            progress = (current_time - start_time) / total_time
+
+            current_light_state = light_states[frame]
+            S0, S1, S2, S3 = current_light_state.stokes_vector()
+            
+            # reset trail for each loop
+            if frame == 0:
+                history_x.clear()
+                history_y.clear()
+                history_z.clear()
+            
+            # prevent division by zero
+            if S0 > self._MIN_S0:
+                current_x, current_y, current_z = S1/S0, S2/S0, S3/S0
+                point._offsets3d = ([current_x], [current_y], [current_z])
+                
+                history_x.append(current_x)
+                history_y.append(current_y)
+                history_z.append(current_z)
+                point.set_alpha(1)
+            else:
+                point.set_alpha(0)
+            
+            # trail of previous posiitons
+            trail.set_data(history_x, history_y)
+            trail.set_3d_properties(history_z)
+                      
+            # progress bar  
+            bar_fill.set_width(0.6 * progress)
+            
+            # text that shows time
+            time_text.set_text(fr"$\mathbf{{t}} = {current_time:.2f}$ s")
+            
+            # subtitle
+            subtext.set_text(f"Stokes Parameters: ({S0: .4f}, {S1: .4f}, {S2: .4f}, {S3: .4f})")
+
+            return point, bar_fill, time_text, subtext
+
+        # create and run animation
+        anim = FuncAnimation(
+            fig,
+            update,
+            frames=len(times),
+            interval=(times[1] - times[0]) * 1000,
+            blit=False,
+            repeat=True
+        )
+        
+        plt.show()
+        
+    def _draw_poincare_sphere(self, ax: Axes) -> None:
+        """Draws the initial setup of the display, including hiding original axes, drawing
+        new axes, and drawing the unit sphere.
+        
+        :param ax: The axes that the sphere is drawn on
+        :type ax: Axes
         """
         
         # generate points on the unit sphere
@@ -36,8 +179,6 @@ class Poincare(Display):
         Z = self._RADIUS * np.outer(np.ones(np.size(u)), np.cos(v))
 
         # plot unit sphere
-        fig = super().create_fig()
-        ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(X, Y, Z, color='c', alpha=0.4, rcount=50, ccount=50)
 
         # generate and plot latitude lines
@@ -85,10 +226,6 @@ class Poincare(Display):
         # R and L labels
         ax.text(0, 0, self._AXIS_SCALE_FACTOR * self._RADIUS + self._AXIS_LABEL_OFFSET, r"$\mathbf{|R \rangle}$", color="black", fontsize=14)
         ax.text(0, 0, -self._AXIS_SCALE_FACTOR * self._RADIUS - self._AXIS_LABEL_OFFSET, r"$\mathbf{|L \rangle}$", color="black", fontsize=14)
-        
-        # plot light information on graph
-        S0, S1, S2, S3 = self.light.stokes_vector()
-        ax.scatter(S1/S0, S2/S0, S3/S0, c='black', marker='o', s=300)
 
         # ensure non-squashed appearance
         max_range = np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
@@ -118,10 +255,3 @@ class Poincare(Display):
 
         # hiding axis lines
         ax.set_axis_off()
-
-        # title
-        plt.suptitle("Poincare Sphere\n", fontsize=20, fontweight='bold', y=0.95)
-        plt.figtext(0.5, 0.88, f"Stokes Parameters: ({S0: .4f}, {S1: .4f}, {S2: .4f}, {S3: .4f})",
-                    ha="center", fontsize=12)
-        
-        plt.show()
