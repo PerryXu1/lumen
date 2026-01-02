@@ -2,13 +2,14 @@ from collections.abc import Sequence
 from typing import Optional
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
+from matplotlib.text import Text
 import numpy as np
 from ..models.light import Light
-from .display import Display, DisplaySettings
+from .display import DisplayOne, DisplaySettings
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-class PolarizationView3D(Display):
+class PolarizationView3D(DisplayOne):
     """Shows a 3D view of the horizontal polarization state,
     vertical polarization state, and the overall combined polarization state.
     The display is animated.
@@ -30,11 +31,14 @@ class PolarizationView3D(Display):
     
     DEFAULT_FPS = 24
     DEFAULT_TOTAL_TIME = (_PERIODS * 2 * np.pi ) / _OMEGA # total time for one loop of the animation
+    
+    _INTENSITY_LIMIT = 10 ** -12
 
-    def __init__(self, light: Light, *, settings: Optional[DisplaySettings] = None):
-        super().__init__(light, settings)
+    def __init__(self, *, settings: Optional[DisplaySettings] = None):
+        super().__init__(settings)
 
-    def display(self, *, FPS:int = DEFAULT_FPS, total_time: float = DEFAULT_TOTAL_TIME) -> None:
+    def display_one(self, light: Light, *, FPS:int = DEFAULT_FPS,
+                total_time: float = DEFAULT_TOTAL_TIME) -> None:
         """Displays information in the 3d polarization view.
         
         :param FPS: the frames per second of the animation
@@ -133,31 +137,53 @@ class PolarizationView3D(Display):
         fig.patches.extend([bar_bg, bar_fill])
         
         # update function, called once per frame in FuncAnimation to update the curve and progress bar
-        def update(frame: int) -> Sequence[Line2D]:
+        def update(frame: int) -> tuple[list[Line2D], Rectangle, Text]:
             progress = frame / total_frames
             t = progress * total_time
             current_phase = (self._OMEGA * t) % (2 * np.pi)
+            
+            eh = light.e[0]
+            ev = light.e[1]
+            
+            magnitude = np.sqrt(np.abs(eh)**2 + np.abs(ev)**2)
+            
+            if magnitude > self._INTENSITY_LIMIT:
+                # update vertical, horizontal polarization curve
+                eh_vals = ((eh *
+                        np.exp(1j * (self._OMEGA*t - self._K*z_array)))/magnitude).real
+                ev_vals = ((ev *
+                        np.exp(1j * (self._OMEGA*t - self._K*z_array)))/magnitude).real
 
-            # update vertical, horizontal polarization curve
-            eh_vals = ((self.light.e[0] *
-                       np.exp(1j * (self._OMEGA*t - self._K*z_array)))/np.abs(self.light.e[0])).real
-            ev_vals = ((self.light.e[1] *
-                       np.exp(1j * (self._OMEGA*t - self._K*z_array)))/np.abs(self.light.e[1])).real
+                # set plot data
+                eh_plot.set_data(eh_vals, np.zeros_like(z_array))
+                eh_plot.set_3d_properties(z_array)
 
-            # set plot data
-            eh_plot.set_data(eh_vals, np.zeros_like(z_array))
-            eh_plot.set_3d_properties(z_array)
+                ev_plot.set_data(np.zeros_like(z_array), ev_vals)
+                ev_plot.set_3d_properties(z_array)
 
-            ev_plot.set_data(np.zeros_like(z_array), ev_vals)
-            ev_plot.set_3d_properties(z_array)
+                e_plot.set_data(eh_vals, ev_vals)
+                e_plot.set_3d_properties(z_array)
 
-            e_plot.set_data(eh_vals, ev_vals)
-            e_plot.set_3d_properties(z_array)
-
-            # update point on total polarization curve where r = 0
-            current_point_plot.set_data([((self.light.e[0] * np.exp(1j * (self._OMEGA*t)))/np.abs(self.light.e[0])).real],
-                                        [((self.light.e[1] * np.exp(1j * (self._OMEGA*t)))/np.abs(self.light.e[1])).real])
-            current_point_plot.set_3d_properties([0])
+                # update point on total polarization curve where r = 0
+                current_point_plot.set_data([((eh * np.exp(1j * (self._OMEGA*t)))/magnitude).real],
+                                            [((ev * np.exp(1j * (self._OMEGA*t)))/magnitude).real])
+                current_point_plot.set_3d_properties([0])
+                
+                # set visibility
+                eh_plot.set_alpha(1.0)
+                ev_plot.set_alpha(1.0)
+                e_plot.set_alpha(1.0)
+                current_point_plot.set_alpha(1.0)
+            else:
+                # set values to 0
+                eh_vals = np.zeros_like(z_array)
+                ev_vals = np.zeros_like(z_array)
+                
+                # hide plots and points
+                eh_plot.set_alpha(0.0)
+                ev_plot.set_alpha(0.0)
+                e_plot.set_alpha(0.0)
+                current_point_plot.set_alpha(0.0)
             
             # update progress bar
             progress_ratio = current_phase / (2 * np.pi)
