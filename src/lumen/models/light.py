@@ -5,12 +5,10 @@ class Light:
     """Class that represents light and stores its relevant properties. Primarily uses a
     Jones vector that is compatible with modified S-matrices.
     
-    :param phase: The global phase of the horizontal component of the light
-    :type phase: float
-    :param stokes: The Stokes vector that describes the light's polarization state
-    :type stokes: Stokes
-    :param frequency: The frequency of the light
-    :type frequency: float
+    :param eh: Horizontal Jones component of light, represented as a complex phasor
+    :type eh: complex
+    :param ev: Vertical Jones component of light, represented as a complex phasor
+    :type ev: complex
     """
     
     __slots__ = "e", "frequency", "phase"
@@ -20,10 +18,32 @@ class Light:
         
     @classmethod
     def from_jones(cls, eh: complex, ev: complex):
+        """Constructs a Light instance from the horizontal and vertical Jones components.
+        
+        :param eh: Horizontal component phasor
+        :type eh: complex
+        :param ev: Vertical component phasor
+        :type ev: complex
+        :return: A new Light instance
+        :rtype: Light
+        """
+        
         return cls(eh, ev)
     
     @classmethod
     def from_stokes(cls, stokes: Stokes, global_phase: float = 0):
+        """Constructs a Light instance from a Stokes vector. This conversion uses the
+        IEEE convention, where RHC implies the Vertical component leads the Horizontal
+        component.
+        
+        :param stokes: The Stokes parameters (S0, S1, S2, S3)
+        :type stokes: Stokes
+        :param global_phase: Absolute phase offset in radians, defaults to 0
+        :type global_phase: float
+        :return: A new Light instance with the calculated Jones vector
+        :rtype: Light
+        """
+        
         Ax = np.sqrt(0.5 * (stokes.S0 + stokes.S1))
         Ay = np.sqrt(0.5 * (stokes.S0 - stokes.S1))
         
@@ -111,5 +131,4 @@ class Light:
         S1 = self.stokes(1)
         S2 = self.stokes(2)
         S3 = self.stokes(3)
-        return 0.5 * \
-            np.arcsin(S3/np.sqrt(np.square(S1) + np.square(S2) + np.square(S3)))
+        return 0.5 * np.arcsin(S3/np.sqrt(np.square(S1) + np.square(S2) + np.square(S3)))

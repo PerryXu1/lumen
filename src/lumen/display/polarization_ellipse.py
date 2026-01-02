@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from typing import Optional
 
+from matplotlib.text import Text
 from matplotlib.animation import FuncAnimation
 from matplotlib.lines import Line2D
 from ..models.light import Light
@@ -105,7 +106,15 @@ class PolarizationEllipse(Display):
         fig.patches.extend([bar_bg, bar_fill])
         
         # update function, called once per frame in FuncAnimation to update the point and progress bar
-        def update(frame: int) -> Sequence[Line2D]:
+        def update(frame: int) -> Sequence[Line2D, Rectangle, Text]:
+            """Function used in FuncAnimation to update graphics every animation frame.
+            
+            :param frame: The frame number of the specified frame in the animation
+            :type frame: int
+            :return: The updated point, the updated progress bar rectangle, and the updated
+                updated phase text
+            :rtype:
+            """
             progress = frame/total_frames
             t = progress*total_time
             current_phase = (self._OMEGA * t) % (2 * np.pi)
