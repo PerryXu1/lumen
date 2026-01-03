@@ -1,0 +1,51 @@
+from ..component import Component
+import numpy as np
+from numpy.typing import NDArray
+
+class FaradayRotator(Component):
+    """
+    A 2-port (1 input, 1 output) non-reciprocal device that rotates the plane of polarization.
+
+    ## Port Designations
+    - Inputs: Port 1
+    - Outputs: Port 2
+
+    ## Port Mapping
+    - Port 1 <-> Port 2
+
+    ## Effect
+    Rotates the plane of polarization. Unlike a wave plate, a Faraday Rotator rotates
+    polarization by an angle theta in the same absolute direction regardless of
+    propagation direction (1->2 or 2->1).
+    
+    :param angle: Angle that the rotator rotates the polarization states by (radians)
+    :type angle: float
+    """
+    
+    __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
+                 "_port_ids", "_in_degree", "_out_degree", "angle")
+    
+    _COMPONENT_NAME = "FR"
+
+    def __init__(self, *, angle: float):
+        super().__init__(self._COMPONENT_NAME, 1, 1)
+        self.angle = angle
+    
+    def get_s_matrix(self, wavelength: float) -> NDArray[np.complex128]:
+        """Returns the modified S matrix that mathematically represents the component
+        
+        :param wavelength: Wavelength of the light going through the component
+        :type wavelength: float
+        :return: The modified S matrix
+        :rtype: NDArray[np.complex128]
+        """
+        
+        cos = np.cos(self.angle)
+        sin = np.sin(self.angle)
+        
+        return np.array([
+            [    0,    0,  cos,  sin],
+            [    0,    0, -sin,  cos],
+            [  cos, -sin,    0,    0],
+            [  sin, -cos,    0,    0]
+        ], dtype=float)

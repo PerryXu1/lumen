@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Sequence
 from lumen.models.stokes import Stokes, StokesParameters
 import numpy as np
@@ -18,6 +19,7 @@ class Light(ABC):
         """
         pass
     
+    @abstractmethod
     def stokes_vector(self) -> Stokes:
         """Returns the Stokes vector, containing all four parameters.
         
@@ -122,7 +124,27 @@ class CoherentLight(Light):
             S2=self.stokes_parameter(StokesParameters.S2),
             S3=self.stokes_parameter(StokesParameters.S3)
         )
-
+        
+    @property
+    def intensity_H(self) -> float:
+        """Calculate the horizontal intensity of the light.
+        
+        :return: The horizontal intensity of the light
+        :rtype: float
+        """
+        
+        return np.abs(self.e[0]) ** 2
+    
+    @property
+    def intensity_V(self) -> float:
+        """Calculate the vertical intensity of the light.
+        
+        :return: The vertical intensity of the light
+        :rtype: float
+        """
+        
+        return np.abs(self.e[1]) ** 2
+    
     @property
     def intensity(self) -> float:
         """Calculate the intensity of the light.
@@ -131,7 +153,7 @@ class CoherentLight(Light):
         :rtype: float
         """
         
-        return self.stokes_parameter(StokesParameters.S0)
+        return np.abs(self.e[0]) ** 2 + np.abs(self.e[1]) ** 2
 
     @property
     def frequency(self):
@@ -264,15 +286,38 @@ class IncoherentLight(Light):
             S3=self.stokes_parameter(StokesParameters.S3)
         )
 
-    @property
     def intensity(self) -> float:
         """Calculate the intensity of the light.
         
         :return: The intensity of the light
         :rtype: float
         """
+        intensity = 0
+        for light in self.coherent_lights:
+            intensity += light.intensity
+        return intensity
+
+    def intensity_V(self) -> float:
+        """Calculate the vertical intensity of the light.
         
-        return self.stokes_parameter(StokesParameters.S0)
+        :return: The vertical intensity of the light
+        :rtype: float
+        """
+        intensity_V = 0
+        for light in self.coherent_lights:
+            intensity_V += light.intensity_V
+        return intensity_V
+
+    def intensity_H(self) -> float:
+        """Calculate the horizontal intensity of the light.
+        
+        :return: The horizontal intensity of the light
+        :rtype: float
+        """
+        intensity_H = 0
+        for light in self.coherent_lights:
+            intensity_H += light.intensity_H
+        return intensity_H
 
     def DOP(self) -> float:
         """Calculates the degree of polarization (DOP) of the light.
@@ -397,3 +442,10 @@ class FixedWavelengthCoherentLight(Light):
             S2=self.stokes_parameter(StokesParameters.S2),
             S3=self.stokes_parameter(StokesParameters.S3)
         )
+
+class Coherence(Enum):
+    """Represents if the light in the circuit is coherent or incoherent
+    """
+    
+    COHERENT = 0
+    INCOHERENT = 1

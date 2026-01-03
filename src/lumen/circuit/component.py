@@ -4,9 +4,7 @@ from dataclasses import dataclass
 from typing import TypeVar
 import numpy as np
 from numpy.typing import NDArray
-
-from ..models.light import CoherentLight
-from ..models.port import Port, PortConnection
+from ..models.port import Port, PortConnection, PortType
 from uuid import uuid4
 
 T = TypeVar("T", bound="Component")
@@ -54,34 +52,24 @@ class Component(ABC):
     :type s_matrix: np.ndarray[np.complex128]
     """
 
-    __slots__ = ("id", "name", "_s_matrix", "_num_inputs", "_input_ports", "_input_port_aliases",
-                 "_input_port_ids", "_num_outputs", "_output_ports", "_output_port_aliases",
-                 "_output_port_ids", "_in_degree", "_out_degree")
+    __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
+                 "_port_ids", "_in_degree", "_out_degree")
 
     def __init__(self, name: str, num_inputs: int, num_outputs: int):
         self.id = uuid4()
         self.name = name
-        # Modified S Matrix - 2N x 2N, N = num_inputs + num_outputs = total number of ports
-        # Similar to an S matrix, where the ijth componenet is the ratio of the complex amplitude
-        # between the output at the ith port and the input at the jth port
-        # To account for polarization, element modified to have 2 elements: one for horizontal and one for vertical
         self._num_inputs = num_inputs
-        self._input_ports = [Port(self) for _ in range(num_inputs)]
-        # maps aliases to ports
-        self._input_port_aliases = {}
-        # maps ids to ports
-        self._input_port_ids = {}
-        for input_port in self._input_ports:
-            self._input_port_ids[input_port.id] = input_port
-
         self._num_outputs = num_outputs
-        self._output_ports = [Port(self) for _ in range(num_outputs)]
+        
+        self._ports = [Port(self, PortType.INPUT) for _ in range(num_inputs)]
+        self._ports.extend([Port(self, PortType.OUTPUT) for _ in range(num_outputs)])
+
         # maps aliases to ports
-        self._output_port_aliases = {}
+        self._port_aliases = {}
         # maps ids to ports
-        self._output_port_ids = {}
-        for output_port in self._output_ports:
-            self._output_port_ids[output_port.id] = output_port
+        self._port_ids = {}
+        for port in self._ports:
+            self._port_ids[port.id] = port
 
         self._in_degree = 0
         self._out_degree = 0
@@ -98,7 +86,7 @@ class Component(ABC):
         pass
         
 
-    def search_by_input_alias(self, alias: str) -> Port:
+    def search_by_alias(self, alias: str) -> Port:
         """Returns the input port referred to by a previously-set alias for the port. If the alias
         does not exist, an exception is thrown.
 
@@ -108,31 +96,14 @@ class Component(ABC):
         :return: The input port referred to by the alias
         :rtype: Port
         """
-        from .exceptions import MissingAliasException
+        from .circuit_exceptions import MissingAliasException
 
-        if alias not in self._input_port_aliases:
+        if alias not in self._port_aliases:
             raise MissingAliasException(alias)
 
-        return self._input_port_aliases[alias]
+        return self._port_aliases[alias]
 
-    def search_by_output_alias(self, alias: str) -> Port:
-        """Returns the output port referred to by a previously-set alias for the port. If the alias
-        does not exist, an exception is thrown.
-
-        :param alias: The alias of an output port; used to search for an output port with the
-            corresponding name
-        :type alias: str
-        :return: The output port referred to by the alias
-        :rtype: Port
-        """
-        from .exceptions import MissingAliasException
-
-        if alias not in self._output_port_aliases:
-            raise MissingAliasException(alias)
-
-        return self._output_port_aliases[alias]
-
-    def set_input_alias(self, index: int, alias: str) -> None:
+    def set_alias(self, index: int, alias: str) -> None:
         """Sets the alias of the specified input port to the specified name.
 
         :param index: The index of the input port which will have their alias set
@@ -140,125 +111,74 @@ class Component(ABC):
         :param alias: The new alias of the input port 
         :type alias: str
         """
-        from .exceptions import DuplicateAliasException
+        from .circuit_exceptions import DuplicateAliasException
 
-        if alias in self._input_port_aliases:
+        if alias in self._port_aliases:
             raise DuplicateAliasException(alias)
 
-        input_port = self._input_ports[index]
-        self._input_port_aliases[alias] = input_port
+        port = self._ports[index - 1]
+        self._port_aliases[alias] = port
 
-    def set_output_alias(self, index: int, alias: str) -> None:
-        """Sets the alias of the specified output port to the specified name.
+    def connect_port(self, port_name: int | str, *, to: PortRef) -> None:
+        """Connects a component's port with another component's port.
 
-        :param index: The index of the output port which will have their alias set
-        :type index: int
-        :param alias: The new alias of the output port 
-        :type alias: str
-        """
-        from .exceptions import DuplicateAliasException
-
-        if alias in self._output_port_aliases:
-            raise DuplicateAliasException(alias)
-
-        output_port = self._output_ports[index]
-        self._output_port_aliases[alias] = output_port
-
-    def connect_input_port(self, input_port_name: int | str, *, to: PortRef) -> None:
-        """Connects a component's input port with another component's output port.
-
-        :param input_port_name: The index or alias of the input port
+        :param input_port_name: The index or alias of the port
         :type input_port_name: int, str
-        :param to: port reference representing the output port that the input port
+        :param to: port reference representing the other port that the port
             will be connected to
         :type to: PortRef
         """
 
-        input_port = self._get_input_port_from_ref(to=PortRef(self, input_port_name))
-        output_port = self._get_output_port_from_ref(to=to)
+        port1 = self._get_port_from_ref(port_ref=PortRef(self, port_name))
+        port2 = self._get_port_from_ref(port_ref=to)
 
-        if input_port.connection is None:
-            self._in_degree += 1
+        if port1.connection is None:
+            if port1.port_type == PortType.INPUT:
+                self._in_degree += 1
+            elif port2.port_type == PortType.OUTPUT:
+                self._out_degree += 1
 
-        input_port.connection = PortConnection(output_port)
+        port1.connection = PortConnection(port2)
 
-    def connect_output_port(self, output_port_name: int | str, *, to: PortRef) -> None:
-        """Connects a component's output port with another component's input port.
-
-        :param output_port_name: The index or alias of the output port
-        :type output_port_name: int, str
-        :param to: port reference representing the input port that the output port
-            will be connected to
-        :type to: PortRef
-        """
-
-        input_port = self._get_input_port_from_ref(to=to)
-        output_port = self._get_output_port_from_ref(to=PortRef(self, output_port_name))
-
-        if output_port.connection is None:
-            self._out_degree += 1
-        output_port.connection = PortConnection(input_port)
-
-    def disconnect_input(self, input_port_name: int | str) -> None:
+    def disconnect_port(self, port_name: int | str) -> None:
         """Disconnects the specified input.
 
         :param input_port_name: The index or alias of the input port
         :type input_port_name: int, str
         """
-        input_port = self._get_input_port_from_ref(to=PortRef(self, input_port_name))
+        port = self._get_port_from_ref(port_ref=PortRef(self, port_name))
 
-        if input_port.connection is not None:
-            self._in_degree -= 1
-        input_port.connection = None
+        if port.connection is not None:
+            if port.port_type == PortType.INPUT:
+                self._in_degree -= 1
+            elif port.port_type == PortType.OUTPUT:
+                self._out_degree -= 1
+        port.connection = None
+        
+    def _disconnect_by_port(self, port: Port) -> None:
+        if port.connection is not None:
+            if port.port_type == PortType.INPUT:
+                self._in_degree -= 1
+            elif port.port_type == PortType.OUTPUT:
+                self._out_degree -= 1
+        port.connection = None
 
-    def disconnect_output(self, output_port_name: int | str) -> None:
-        """Disconnects the specified output.
-
-        :param output_port_name: The index or alias of the output port
-        :type output_port_name: int, str
-        """
-
-        output_port = self._get_output_port_from_ref(to=PortRef(self, output_port_name))
-
-        if output_port.connection is not None:
-            self._out_degree -= 1
-        output_port.connection = None
-
-    def _get_input_port_from_ref(self, *, to: PortRef) -> Port:
+    def _get_port_from_ref(self, *, port_ref: PortRef) -> Port:
         """Gets the input port specified by the port reference passed in.
         
         :param to: the port reference that specifies the desired input port
         :type to: PortRef
         """
         
-        from .exceptions import MissingAliasException
+        from .circuit_exceptions import MissingAliasException
 
-        component, port_name = to
-
-        if isinstance(port_name, int):
-            port = component._input_ports[port_name]
-        elif isinstance(port_name, str):
-            if port_name in component._input_port_aliases:
-                port = component._input_port_aliases[port_name]
-            else:
-                raise MissingAliasException(port_name)
-        return port
-
-    def _get_output_port_from_ref(self, *, to: PortRef) -> Port:
-        """Gets the output port specified by the port reference passed in.
-        
-        :param to: the port reference that specifies the desired output port
-        :type to: PortRef
-        """
-        from .exceptions import MissingAliasException
-
-        component, port_name = to
+        component, port_name = port_ref
 
         if isinstance(port_name, int):
-            port = component._output_ports[port_name]
+            port = component._ports[port_name - 1]
         elif isinstance(port_name, str):
-            if port_name in component._output_port_aliases:
-                port = component._output_port_aliases[port_name]
+            if port_name in component._port_aliases:
+                port = component._port_aliases[port_name]
             else:
                 raise MissingAliasException(port_name)
         return port

@@ -9,11 +9,10 @@ class Laser:
     """
 
     # add more parameters
-    __slots__ = "_light_func", "wavelength"
+    __slots__ = "_light_func",
     
-    def __init__(self, *, light_func: Callable[[float], FixedWavelengthCoherentLight], wavelength: float):
+    def __init__(self, *, light_func: Callable[[float], CoherentLight]):
         self._light_func = light_func
-        self.wavelength = wavelength
     
     def __call__(self, t: float) -> CoherentLight:
         """Makes the class's light function callable directly through the class
@@ -23,6 +22,4 @@ class Laser:
         :return: The value of the light function at the specified time
         :rtype: CoherentLight
         """
-        eh, ev = self._light_func(t).e
-        light = CoherentLight(eh, ev, self.wavelength)
-        return light
+        return self._light_func(t)
