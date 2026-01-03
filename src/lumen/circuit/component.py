@@ -1,9 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import TypeVar
 import numpy as np
 from numpy.typing import NDArray
+
+from ..models.light import CoherentLight
 from ..models.port import Port, PortConnection
 from uuid import uuid4
 
@@ -56,14 +58,13 @@ class Component(ABC):
                  "_input_port_ids", "_num_outputs", "_output_ports", "_output_port_aliases",
                  "_output_port_ids", "_in_degree", "_out_degree")
 
-    def __init__(self, name: str, num_inputs: int, num_outputs: int, s_matrix: NDArray[np.complex128]):
+    def __init__(self, name: str, num_inputs: int, num_outputs: int):
         self.id = uuid4()
         self.name = name
         # Modified S Matrix - 2N x 2N, N = num_inputs + num_outputs = total number of ports
         # Similar to an S matrix, where the ijth componenet is the ratio of the complex amplitude
         # between the output at the ith port and the input at the jth port
         # To account for polarization, element modified to have 2 elements: one for horizontal and one for vertical
-        self._s_matrix = s_matrix
         self._num_inputs = num_inputs
         self._input_ports = [Port(self) for _ in range(num_inputs)]
         # maps aliases to ports
@@ -84,6 +85,18 @@ class Component(ABC):
 
         self._in_degree = 0
         self._out_degree = 0
+
+    @abstractmethod
+    def get_s_matrix(self, wavelength: float) -> NDArray[np.complex128]:
+        """Returns the s_matrix that mathematically represents the component
+        
+        :param wavelength: Wavelength of the light going through the component
+        :type wavelength: float
+        :return: The modified S matrix
+        :rtype: NDArray[np.complex128]
+        """
+        pass
+        
 
     def search_by_input_alias(self, alias: str) -> Port:
         """Returns the input port referred to by a previously-set alias for the port. If the alias
