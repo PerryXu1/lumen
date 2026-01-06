@@ -3,10 +3,18 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import uuid4
 from typing import TYPE_CHECKING
+from enum import Enum
 
 # avoids circular import errors from type hinting
 if TYPE_CHECKING:
     from ..circuit.component import Component
+
+class PortType(Enum):
+    """Enum to enumerate input ports and output port
+    """
+    
+    INPUT = 0
+    OUTPUT = 1
 
 class Connection(ABC):
     """Connection abstract base class that cannot be instantiated."""
@@ -31,12 +39,18 @@ class Port:
     :type alias: str, optional
     """
 
-    def __init__(self, component: "Component", /, *, connection: Optional["Connection"] = None, alias: Optional[str] = None):
+    def __init__(self, component: "Component", port_type: PortType, /, *,
+                 connection: Optional["Connection"] = None, alias: Optional[str] = None):
         self._id = uuid4()
         self._component = component
+        self._port_type = port_type
         self.connection = connection
         self.alias = alias
         
+    @property
+    def port_type(self):
+        return self._port_type
+    
     @property
     def id(self):
         return self._id

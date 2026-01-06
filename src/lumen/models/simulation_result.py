@@ -1,0 +1,192 @@
+from collections import defaultdict
+from typing import Literal, MutableSequence
+import numpy as np
+from numpy.typing import NDArray
+
+from ..models.model_exceptions import InvalidLightTypeException
+from ..simulation.simulation import Coherence
+from ..models.port import Port
+from ..circuit.component import PortRef
+from ..models.light import IncoherentLight, Light
+
+
+class SimulationResult:
+    """The resulting light states of a simulation. Used to map ports to lists
+    of light states
+    
+    :param coherence: The coherence state of the simulation result's light states
+    :type coherence: Coherence
+    """
+    
+    def __init__(self, coherence: Coherence):
+        self._port_to_output_lights = defaultdict(list)
+        self.coherence = coherence
+    
+    def __getitem__(self, port_ref: PortRef) -> MutableSequence[Light]:
+        """Returns list of lights corresponding to a port reference. Makes class itself callable
+        
+        :param port_ref: The port reference used to specify the desired output states
+        :type port_ref: PortRef
+        :return: List of lights that are outputted from that output port
+        :rtype: MutableSequence[Light]
+        """
+                
+        output_port = self._get_output_port(port_ref)
+        
+        return self._port_to_output_lights[output_port]
+    
+    def get_power(self, port_ref: PortRef) -> NDArray[np.float64]:
+        """Returns the power outputted at the specified output port for every light state.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: The power for every light state
+        :rtype: NDArray[np.float64]
+        """
+        if self.coherence == Coherence.COHERENT:
+            eh, ev = self._get_arrays(port_ref)
+            return np.abs(eh)**2 + np.abs(ev)**2
+        
+        elif self.coherence == Coherence.INCOHERENT:
+            power_list = []
+            output_port = self._get_output_port(port_ref)
+            light_states = self._port_to_output_lights[output_port]
+            
+            for light in light_states:
+                power_list.append(light.intensity)
+            return np.array(power_list)
+        
+    def get_power_H(self, port_ref: PortRef) -> NDArray[np.float64]:
+        """Returns the horizontal power outputted at the specified output port for every light state.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: The power for every light state
+        :rtype: NDArray[np.float64]
+        """
+        if self.coherence == Coherence.COHERENT:
+            eh, ev = self._get_arrays(port_ref) # TODO: fix
+            return np.abs(eh)**2
+        
+        elif self.coherence == Coherence.INCOHERENT:
+            power_list = []
+            output_port = self._get_output_port(port_ref)
+            light_states = self._port_to_output_lights[output_port]
+            
+            for light in light_states:
+                power_list.append(light.intensity_H)
+            return np.array(power_list)
+    
+    def get_power_V(self, port_ref: PortRef) -> NDArray[np.float64]:
+        """Returns the vertical power outputted at the specified output port for every light state.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: The power for every light state
+        :rtype: NDArray[np.float64]
+        """
+        if self.coherence == Coherence.COHERENT:
+            eh, ev = self._get_arrays(port_ref) # TODO: fix
+            return np.abs(ev)**2
+        
+        elif self.coherence == Coherence.INCOHERENT:
+            power_list = []
+            output_port = self._get_output_port(port_ref)
+            light_states = self._port_to_output_lights[output_port]
+            
+            for light in light_states:
+                power_list.append(light.intensity_V)
+            return np.array(power_list)
+
+    def get_wavelengths(self, port_ref: PortRef) -> NDArray[np.float64]:
+        """Returns the wavelengths of the light.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        """
+        output_port = self._get_output_port(port_ref)
+        output_lights = self._port_to_output_lights[output_port]
+        if isinstance(output_lights[0], IncoherentLight):
+            raise InvalidLightTypeException(Coherence.INCOHERENT)
+        
+        return np.array([light.wavelength for light in output_lights])
+    
+    def get_average_power(self, port_ref: PortRef) -> float:
+        """Returns the average power outputted at the specified output port for every light state.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: The average power for that output
+        :rtype: float
+        """
+        return np.mean(self.get_power(port_ref))
+
+    def get_phase(self, port_ref: PortRef,
+                  mode: Literal["horizontal", "vertical"]) -> NDArray[np.float64]:
+        """Returns the phase at the specified output port for every light state
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :param mode: The polarization mode of the phase
+        :type mode: Literal['horizontal', 'vertical']
+        :return: The phase for every light state
+        :rtype: NDArray[np.float64]
+        """
+        
+        if self.coherence == Coherence.COHERENT:
+            eh, ev = self._get_arrays(port_ref)
+            if mode == "horizontal":
+                return np.angle(ev)
+            return np.angle(eh)
+        else:
+            raise InvalidLightTypeException(self.coherence)
+            
+    
+    def get_relative_phase(self, port_ref: PortRef) -> NDArray[np.float64]:
+        """Returns the relative phase between the horizontal and vertical modes at the
+        specified output port for every light state
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: The phase for every light state
+        :rtype: NDArray[np.float64]
+        """    
+        
+        return self.get_phase(port_ref, "horizontal") - self.get_phase(port_ref, "vertical")
+    
+    def _get_arrays(self, port_ref: PortRef) -> tuple[NDArray]:
+        """Helper function to get eh and ev as numpy arrays for speed.
+        
+        :param port_ref: The port reference that specifies the port
+        :type port_ref: PortRef
+        :return: the horizontal E field and the vertical E field
+        :rtype: tuple[NDArray]
+        """        
+        output_port = self._get_output_port(port_ref)
+        light_states = self._port_to_output_lights[output_port]
+        eh = np.array([light.e[0] for light in light_states])
+        ev = np.array([light.e[1] for light in light_states])
+        return eh, ev
+    
+    def _get_output_port(self, port_ref: PortRef) -> Port:
+        """Helper function to get specified output port from port reference.
+        
+        :param port_ref: Port reference that specifies output port
+        :type port_ref: PortRef
+        :return: The specified port
+        :rtype: Port
+        """
+        
+        from ..circuit.circuit_exceptions import MissingAliasException
+        
+        component, output_port_name = port_ref
+        
+        if isinstance(output_port_name, int):
+            port = component._ports[output_port_name - 1]
+            return port
+        elif isinstance(output_port_name, str):
+            if output_port_name in component._port_aliases:
+                port = component._port_aliases[output_port_name]
+                return component._output_port_aliases[output_port_name]
+            else:
+                raise MissingAliasException(output_port_name)
