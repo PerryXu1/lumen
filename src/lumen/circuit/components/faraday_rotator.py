@@ -3,8 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 class FaradayRotator(Component):
-    """
-    A 2-port (1 input, 1 output) non-reciprocal device that rotates the plane of polarization.
+    """2-port (1 input, 1 output) non-reciprocal device that rotates the plane of polarization.
 
     ## Port Designations
     - Inputs: Port 1
