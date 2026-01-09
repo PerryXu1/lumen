@@ -14,15 +14,17 @@ class PolarizationRotator(Component):
 
     ## Effect
     Physically swaps H and V energy.
+    
+    :param name: Name of the component
+    :type name: str
     """
     
     __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
                  "_port_ids", "_in_degree", "_out_degree")
     
-    _COMPONENT_NAME = "PR"
 
-    def __init__(self):
-        super().__init__(self._COMPONENT_NAME, 1, 1)
+    def __init__(self, name: str):
+        super().__init__(name, 1, 1)
         
     def __str__(self):
         return (

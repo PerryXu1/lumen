@@ -41,27 +41,27 @@ class CoherentLight(Light):
     :type wavelength: float
     """
     
-    __slots__ = "e", "wavelength",
+    __slots__ = "_e", "_wavelength",
     
-    c = 299792458
+    _C = 299792458
 
     def __init__(self, eh: complex, ev: complex, wavelength: float):
-        self.e = np.array([eh, ev], dtype=complex)
-        self.wavelength = wavelength
+        self._e = np.array([eh, ev], dtype=complex)
+        self._wavelength = wavelength
     
     def __str__(self):
         s = self.stokes_vector()
         return (
             f"--- Coherent Light ---\n"
-            f"  Wavelength: {self.wavelength * 1e9:.1f} nm\n"
+            f"  Wavelength: {self._wavelength * 1e9:.1f} nm\n"
             f"  Intensity:  {self.intensity:.4e}\n"
-            f"  Jones:      [{self.e[0]:.2f}, {self.e[1]:.2f}]\n"
+            f"  Jones:      [{self._e[0]:.2f}, {self._e[1]:.2f}]\n"
             f"  Stokes:     ({s.S0:.2f}, {s.S1:.2f}, {s.S2:.2f}, {s.S3:.2f})"
         )
 
     def __repr__(self):
-        return (f"CoherentLight(eh={self.e[0]!r}, ev={self.e[1]!r}, "
-                f"wavelength={self.wavelength!r})")
+        return (f"CoherentLight(eh={self._e[0]!r}, ev={self._e[1]!r}, "
+                f"wavelength={self._wavelength!r})")
     
     @classmethod
     def from_jones(cls, eh: complex, ev: complex, wavelength: float):
@@ -104,6 +104,14 @@ class CoherentLight(Light):
         eh = Ax*np.exp(1j * global_phase)
         ev = Ay*np.exp(1j * (global_phase + relative_phase))
         return cls(eh, ev, wavelength)
+    
+    @property
+    def e(self):
+        return self._e
+    
+    @property
+    def wavelength(self):
+        return self._wavelength
 
     def stokes_parameter(self, parameter: StokesParameters, /) -> float:
         """Gets the specified Stokes parameter associated with the light.
@@ -115,13 +123,13 @@ class CoherentLight(Light):
         """
         
         if parameter == StokesParameters.S0:
-            return (self.e[0] * np.conjugate(self.e[0]) + self.e[1] * np.conjugate(self.e[1])).real
+            return (self._e[0] * np.conjugate(self._e[0]) + self._e[1] * np.conjugate(self._e[1])).real
         if parameter == StokesParameters.S1:
-            return (self.e[0] * np.conjugate(self.e[0]) - self.e[1] * np.conjugate(self.e[1])).real
+            return (self._e[0] * np.conjugate(self._e[0]) - self._e[1] * np.conjugate(self._e[1])).real
         if parameter == StokesParameters.S2:
-            return 2 * np.real(np.conjugate(self.e[0])*self.e[1])
+            return 2 * np.real(np.conjugate(self._e[0])*self._e[1])
         if parameter == StokesParameters.S3:
-            return 2 * np.imag(np.conjugate(self.e[0])*self.e[1])
+            return 2 * np.imag(np.conjugate(self._e[0])*self._e[1])
 
         raise ValueError("Invalid stokes parameter.")
 
@@ -141,40 +149,19 @@ class CoherentLight(Light):
         
     @property
     def intensity_H(self) -> float:
-        """Calculate the horizontal intensity of the light.
-        
-        :return: The horizontal intensity of the light
-        :rtype: float
-        """
-        
-        return np.abs(self.e[0]) ** 2
+        return np.abs(self._e[0]) ** 2
     
     @property
     def intensity_V(self) -> float:
-        """Calculate the vertical intensity of the light.
-        
-        :return: The vertical intensity of the light
-        :rtype: float
-        """
-        
-        return np.abs(self.e[1]) ** 2
+        return np.abs(self._e[1]) ** 2
     
     @property
     def intensity(self) -> float:
-        """Calculate the intensity of the light.
-        
-        :return: The intensity of the light
-        :rtype: float
-        """
-        
-        return np.abs(self.e[0]) ** 2 + np.abs(self.e[1]) ** 2
+        return np.abs(self._e[0]) ** 2 + np.abs(self._e[1]) ** 2
 
     @property
     def frequency(self):
-        """Calculates the frequency of the light
-        """
-        
-        return self.c / self.wavelength
+        return self._C / self._wavelength
 
     def orientation_angle(self) -> float:
         """Calculates the orientation angle of the light.
@@ -315,11 +302,6 @@ class IncoherentLight(Light):
 
     @property
     def intensity(self) -> float:
-        """Calculate the intensity of the light.
-        
-        :return: The intensity of the light
-        :rtype: float
-        """
         intensity = 0
         for light in self.coherent_lights:
             intensity += light.intensity
@@ -327,11 +309,6 @@ class IncoherentLight(Light):
 
     @property
     def intensity_V(self) -> float:
-        """Calculate the vertical intensity of the light.
-        
-        :return: The vertical intensity of the light
-        :rtype: float
-        """
         intensity_V = 0
         for light in self.coherent_lights:
             intensity_V += light.intensity_V
@@ -339,11 +316,6 @@ class IncoherentLight(Light):
 
     @property
     def intensity_H(self) -> float:
-        """Calculate the horizontal intensity of the light.
-        
-        :return: The horizontal intensity of the light
-        :rtype: float
-        """
         intensity_H = 0
         for light in self.coherent_lights:
             intensity_H += light.intensity_H

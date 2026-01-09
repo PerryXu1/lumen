@@ -17,31 +17,36 @@ class FaradayRotator(Component):
     polarization by an angle theta in the same absolute direction regardless of
     propagation direction (1->2 or 2->1).
     
-    :param angle: Angle that the rotator rotates the polarization states by (radians)
+    :param name: Name of the component
+    :type name: str
+    :param angle: Angle that the rotator rotates the polarization states by [rad]
     :type angle: float
     """
     
     __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
                  "_port_ids", "_in_degree", "_out_degree", "angle")
     
-    _COMPONENT_NAME = "FR"
 
-    def __init__(self, *, angle: float):
-        super().__init__(self._COMPONENT_NAME, 1, 1)
-        self.angle = angle
+    def __init__(self, *, name: str, angle: float):
+        super().__init__(name, 1, 1)
+        self._angle = angle
         
     def __str__(self):
-        angle_deg = np.degrees(self.angle)
+        angle_deg = np.degrees(self._angle)
         
         return (
             f"--- Faraday Rotator: {self.name} ---\n"
-            f"  Rotation Angle: {self.angle:.4f} rad ({angle_deg:.2f}°)\n"
+            f"  Rotation Angle: {self._angle:.4f} rad ({angle_deg:.2f}°)\n"
             f"  Non-reciprocal: Yes\n"
             f"  Ports: Port 1 (In) -> Port 2 (Out)"
         )
         
     def __repr__(self):
-        return f"{self.__class__.__name__}(angle={self.angle!r})"
+        return f"{self.__class__.__name__}(angle={self._angle!r})"
+    
+    @property
+    def _angle(self):
+        return self._angle
     
     def get_s_matrix(self, wavelength: float) -> NDArray[np.complex128]:
         """Returns the modified S matrix that mathematically represents the component
@@ -52,8 +57,8 @@ class FaradayRotator(Component):
         :rtype: NDArray[np.complex128]
         """
         
-        cos = np.cos(self.angle)
-        sin = np.sin(self.angle)
+        cos = np.cos(self._angle)
+        sin = np.sin(self._angle)
         
         return np.array([
             [    0,    0,  cos,  sin],

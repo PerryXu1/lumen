@@ -25,15 +25,16 @@ class BeamSplitter(Component):
     ### Beam Combining:
     If both input ports are connected, the component acts as a beam combiner. If the light at
     port a leads the light at port b by 90 degrees, light will only be outputted at port b
+    
+    :param name: Name of the component
+    :type name: str
     """
     
     __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
                  "_port_ids", "_in_degree", "_out_degree")
     
-    _COMPONENT_NAME = "BS"
-
-    def __init__(self):
-        super().__init__(self._COMPONENT_NAME, 2, 2)
+    def __init__(self, *, name: str):
+        super().__init__(name, 2, 2)
         
     def __str__(self):
         mode = "Idle"

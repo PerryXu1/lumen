@@ -17,23 +17,23 @@ class QuarterWavePlate(Component):
     Shifts phase between fast and slow axes by pi/2 (90 deg). Used to convert between 
     linear and circular polarization.
         
-    :param angle: The angle that the QuarterWavePlate is oriented relative to the horizontal state (radians)
+    :param name: Name of the component
+    :type name: str
+    :param angle: The angle that the QuarterWavePlate is oriented relative to the horizontal state [rad]
     :type angle: float | Literal["horizontal", "vertical"]
     """
     
     __slots__ = ("id", "name", "_num_inputs", "_num_outputs", "_ports", "_port_aliases",
                  "_port_ids", "_in_degree", "_out_degree", "angle")
     
-    _COMPONENT_NAME = "QuarterWavePlate"
-
-    def __init__(self, *, angle: float | Literal["horizontal", "vertical"]):
+    def __init__(self, *, name: str, angle: float | Literal["horizontal", "vertical"]):
         if angle == "horizontal":
             self.angle = 0
         elif angle == "vertical":
             self.angle = np.pi / 2
         elif isinstance(angle, float):
             self.angle = angle
-        super().__init__(self._COMPONENT_NAME, 1, 1)
+        super().__init__(name, 1, 1)
         
     def __str__(self):
         angle_deg = np.degrees(self.angle)
@@ -56,6 +56,10 @@ class QuarterWavePlate(Component):
             f"{self.__class__.__name__}("
             f"angle={self.angle!r})"
         )
+        
+    @property
+    def angle(self):
+        return self._angle
     
     def get_s_matrix(self, wavelength: float) -> NDArray[np.complex128]:
         """Returns the modified S matrix that mathematically represents the component

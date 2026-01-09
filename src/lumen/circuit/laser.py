@@ -1,5 +1,8 @@
 from collections.abc import Callable
-from ..models.light import CoherentLight
+from typing import TYPE_CHECKING
+
+from ..circuit.circuit_exceptions import InvalidLightFunctionException
+from ..models.light import CoherentLight, Light
 
 class Laser:
     """Representation of a laser input into the circuit
@@ -30,4 +33,7 @@ class Laser:
         :return: The value of the light function at the specified time
         :rtype: CoherentLight
         """
-        return self._light_func(t)
+        result = self._light_func(t)
+        if isinstance(result, Light):
+            return result
+        raise InvalidLightFunctionException(self)

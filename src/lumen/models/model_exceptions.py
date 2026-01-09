@@ -18,8 +18,8 @@ class InvalidLightTypeException(Exception):
     
     def __init__(self, coherence: Coherence, message: Optional[str] = None):
         super().__init__(coherence, message)
-        self.message = message
         self.light_type = coherence
+        self.message = message
 
     def __str__(self):
         if self.message:
@@ -32,7 +32,7 @@ class InvalidLightTypeException(Exception):
     def __repr__(self):
         return f"{self.__class__.__name__}(coherence={self.light_type!r}, message={self.message!r})"
 
-class PortTypeException(Exception):
+class PortTypeException(Exception): # not needed?
     """Exception thrown when an input port is used for an output-port-specific task or vice versa
     
     :param port_type: The type of the port inputted
