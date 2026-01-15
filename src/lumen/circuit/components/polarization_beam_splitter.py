@@ -21,13 +21,13 @@ class PolarizationBeamSplitter(Component):
     ### Beam Splitting
     If only a single input port is connected, the component acts as a beam splitter.
     
-    H light is outputted at Output Port 1 while V light is outputted at Output Port 2
+    H light is outputted at Port 3 while V light is outputted at Port 4.
     
     ### Beam Combining
     If both input ports are connected, the component acts as a beam combiner.
     
-    If H light is inputted at Input Port 0 and V light is inputted at Input Port 1, the
-    new polarization state is outputted at Output Port 0
+    If H light is inputted at Port 1 and V light is inputted at Port 2, the
+    new polarization state is outputted at Port 3
     
     :param name: Name of the component
     :type name: str
