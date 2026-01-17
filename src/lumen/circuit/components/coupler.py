@@ -44,7 +44,7 @@ class Coupler(Component):
 
     def __init__(self, *, name: str, central_wavelength_H: float, central_wavelength_V: float,
                  central_coupling_strength_H: float, central_coupling_strength_V: float,
-                 coupling_gradient_V: float, coupling_gradient_H: float, length: float,
+                 coupling_gradient_V: float = 0, coupling_gradient_H: float = 0, length: float,
                  insertion_loss_db: float = 0):
         super().__init__(name, 2, 2)
         self._central_wavelength_H = central_wavelength_H

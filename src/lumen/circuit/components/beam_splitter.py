@@ -24,7 +24,7 @@ class BeamSplitter(Component):
     
     ### Beam Combining:
     If both input ports are connected, the component acts as a beam combiner. If the light at
-    port a leads the light at port b by 90 degrees, light will only be outputted at port b
+    port a leads the light at port b by 90 degrees, light will only be outputted at port (b + 2)
     
     :param name: Name of the component
     :type name: str

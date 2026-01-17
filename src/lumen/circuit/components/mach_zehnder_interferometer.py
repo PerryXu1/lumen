@@ -38,8 +38,8 @@ class MachZehnderInterferometer(Component):
                  "_port_ids", "_in_degree", "_out_degree", "_arm_length", "_central_wavelength_H",
                  "_central_wavelength_V", "_nH", "_nV", "_nH_gradient", "_nV_gradient")
     
-    def __init__(self, *, name: str, arm_length: float, nH: float, nV: float, nH_gradient: float,
-                 nV_gradient: float, central_wavelength_H: float, central_wavelength_V: float):
+    def __init__(self, *, name: str, arm_length: float, nH: float, nV: float, nH_gradient: float = 0,
+                 nV_gradient: float = 0, central_wavelength_H: float, central_wavelength_V: float):
         super().__init__(name, 1, 1)
         self._arm_length = arm_length
         self._nH = nH

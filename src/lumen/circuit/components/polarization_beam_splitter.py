@@ -46,7 +46,8 @@ class PolarizationBeamSplitter(Component):
                  "_phase_t", "_phase_e")
     
 
-    def __init__(self, *, name: str, ER_db: float | Literal["ideal"] = Literal["ideal"], insertion_loss_db: float = 0, phase_t: float = 0, phase_e: float = 0):
+    def __init__(self, *, name: str, ER_db: float | Literal["ideal"] = Literal["ideal"],
+                 insertion_loss_db: float = 0, phase_t: float = 0, phase_e: float = 0):
         super().__init__(name, 2, 2)
         self._ER_db = ER_db
         self._insertion_loss_db = insertion_loss_db

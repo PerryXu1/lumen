@@ -37,9 +37,10 @@ class PhaseShifter(Component):
                  "_nV", "_nV_gradient", "_central_wavelength_V", "_length", "_power_ratio_H", "_power_ratio_V")
     
 
-    def __init__(self, *, name: str, nH: float, nH_gradient: float, central_wavelength_H: float,
-                 nV: float, nV_gradient: float, central_wavelength_V: float,
-                 length: float, power_ratio_H: float = 0, power_ratio_V: float = 0):
+    def __init__(self, *, name: str, nH: float, nV: float, 
+                 central_wavelength_H: float, central_wavelength_V: float,
+                 nH_gradient: float = 0, nV_gradient: float = 0, 
+                 length: float,power_ratio_H: float = 0, power_ratio_V: float = 0):
         super().__init__(name, 1, 1)
         self._nH = nH
         self._nH_gradient = nH_gradient
