@@ -64,7 +64,7 @@ class CoherentLight(Light):
                 f"wavelength={self._wavelength!r})")
     
     @classmethod
-    def from_jones(cls, eh: complex, ev: complex, wavelength: float):
+    def from_jones(cls, *, eh: complex, ev: complex, wavelength: float):
         """Constructs a Light instance from the horizontal and vertical Jones components.
         
         :param eh: Horizontal component phasor
@@ -80,7 +80,7 @@ class CoherentLight(Light):
         return cls(eh, ev, wavelength)
     
     @classmethod
-    def from_stokes(cls, stokes: Stokes, wavelength: float, global_phase: float = 0):
+    def from_stokes(cls, *, stokes: Stokes, wavelength: float, global_phase: float = 0):
         """Constructs a Light instance from a Stokes vector. This conversion uses the
         IEEE convention, where RHC implies the Vertical component leads the Horizontal
         component.
@@ -198,7 +198,7 @@ class IncoherentLight(Light):
     
     c = 299792458
 
-    def __init__(self, coherent_lights: Sequence[CoherentLight]):
+    def __init__(self, *, coherent_lights: Sequence[CoherentLight]):
         self._coherent_lights = coherent_lights
 
     def __str__(self):
