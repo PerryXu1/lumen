@@ -202,8 +202,9 @@ class Simulation:
                     for output_port_index, output_port in enumerate(photonic_circuit._circuit_outputs):
                         output_index = 2*port_to_index[output_port]
                         
-                        light = CoherentLight.from_jones(output_vector[output_index],
-                                                output_vector[output_index + 1], wavelength)
+                        light = CoherentLight.from_jones(eh=output_vector[output_index],
+                                                ev=output_vector[output_index + 1],
+                                                wavelength=wavelength)
                                                 
                         simulation_result._port_to_output_lights[
                             self._photonic_circuit._circuit_outputs[output_port_index]].append(light)
@@ -238,8 +239,9 @@ class Simulation:
                     for output_port_index, output_port in enumerate(photonic_circuit._circuit_outputs):
                         output_index = 2*port_to_index[output_port]
                         
-                        light = CoherentLight.from_jones(output_vector[output_index],
-                                                output_vector[output_index + 1], wavelength)
+                        light = CoherentLight.from_jones(eh=output_vector[output_index],
+                                                ev=output_vector[output_index + 1],
+                                                wavelength=wavelength)
                                                 
                         simulation_result._port_to_output_lights[
                             self._photonic_circuit._circuit_outputs[output_port_index]].append(light)
@@ -316,8 +318,9 @@ class Simulation:
                         for output_port_index, output_port in enumerate(photonic_circuit._circuit_outputs):
                             output_index = 2*port_to_index[output_port]
                             
-                            light = CoherentLight.from_jones(output_vector[output_index],
-                                                    output_vector[output_index + 1], wavelength)
+                            light = CoherentLight.from_jones(eh=output_vector[output_index],
+                                                    ev=output_vector[output_index + 1],
+                                                    wavelength=wavelength)
                                                     
                             simulation_result._port_to_output_lights[
                                 self._photonic_circuit._circuit_outputs[output_port_index]][-1] \
@@ -368,8 +371,9 @@ class Simulation:
                         for output_port_index, output_port in enumerate(photonic_circuit._circuit_outputs):
                             output_index = 2*port_to_index[output_port]
                             
-                            light = CoherentLight.from_jones(output_vector[output_index],
-                                                    output_vector[output_index + 1], wavelength)
+                            light = CoherentLight.from_jones(eh=output_vector[output_index],
+                                                    ev=output_vector[output_index + 1],
+                                                    wavelength=wavelength)
                                                     
                             simulation_result._port_to_output_lights[
                                 self._photonic_circuit._circuit_outputs[output_port_index]][-1] \
