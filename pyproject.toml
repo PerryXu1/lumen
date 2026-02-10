@@ -3,7 +3,7 @@ requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lumen"
+name = "lumen-photonics"
 version = "0.0.1"
 authors = [
   { name="Perry Xu", email="perryxu6626@gmail.com" },
