@@ -14,10 +14,11 @@ A Python-based simulation engine for designing and analyzing photonic circuits. 
 
 ## Installation
 
-1. **Clone the repository**:
-   ```bash
-   git clone [https://github.com/yourusername/photonic-circuit-sim.git](https://github.com/yourusername/photonic-circuit-sim.git)
-   cd photonic-circuit-sim
+### From TestPyPI
+Since this project is currently in development, it is hosted on TestPyPI. To install it along with its required dependencies (like NumPy), use the following command:
+
+```bash
+pip install --index-url [https://test.pypi.org/simple/](https://test.pypi.org/simple/) --extra-index-url [https://pypi.org/simple/](https://pypi.org/simple/) lumen-photonics
 
 ## Mathematical Model - Components & Light
 
